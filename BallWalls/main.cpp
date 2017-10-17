@@ -66,18 +66,22 @@ int main(void)
 /* Interrupt bei erreichen des ICR Wertes */
 ISR(TIMER1_COMPA_vect) {
 	ExecuteSteps();
+
+	/* callback ready to get values to raspberry pi */
+	PORTA |= (1 << PA1);
+
 }
 
 ISR(TIMER1_CAPT_vect) {
-/* Port für callback an Raspberry Pi */
-PORTA |= (1 << PA1);
+
 	GetValues();
+	/* callback finish to raspberry pi */
+	PORTB &= ~(1 << PA1);
 }
 
 void GetValues(void)
 {
-	/* Callback finish an Raspberry Pi */
-	PORTB &= ~(1 << PA1);
+	
 }
 
 ISR(SPI_STC_vect){
