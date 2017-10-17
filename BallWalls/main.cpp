@@ -9,8 +9,7 @@
 #include <avr/interrupt.h>
 #include<stdint.h>
 
-void GetValues(void);
-void ExecuteSteps(void);
+void execute_steps(void);
 
 #define icrValue 15999
 
@@ -42,6 +41,8 @@ int main(void)
 	/* SPI aktivieren */
 	SPCR = (1<<SPE);
 	
+	
+
 	/* (startup config) */
 	absStep = 250;
 
@@ -65,22 +66,15 @@ int main(void)
 
 /* Interrupt bei erreichen des ICR Wertes */
 ISR(TIMER1_COMPA_vect) {
-	ExecuteSteps();
-
-	/* callback ready to get values to raspberry pi */
-	PORTA |= (1 << PA1);
-
+	execute_steps();
 }
 
 ISR(TIMER1_CAPT_vect) {
 
-	GetValues();
-	/* callback finish to raspberry pi */
-	PORTB &= ~(1 << PA1);
-}
+	SPCR  |= (1 << SPIE);
+	/* callback ready to get values to raspberry pi */
+	PORTA |= (1 << PA1);
 
-void GetValues(void)
-{
 	
 }
 
@@ -88,13 +82,16 @@ ISR(SPI_STC_vect){
 	
 	if(spiCounter > 3) {
 		spiCounter = 0;
+		/* callback finish to raspberry pi */
+		PORTB &= ~(1 << PA1);
+		/* deactivate isr */
+		SPCR &= ~(1 << SPIE);
 	}
 	spiCounter ++;
 	spiValues[spiCounter] = SPDR;
 }
 
-
-void ExecuteSteps(void){
+void execute_steps(void){
 
 	//set PORTF
 	PORTF = spiValues[0];
