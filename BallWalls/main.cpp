@@ -7,7 +7,6 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include<stdint.h>
 
 void execute_steps(void);
 
@@ -17,33 +16,24 @@ volatile uint16_t absStep;
 volatile bool dirUp;
 volatile bool enabled;
 unsigned char spiValues[4];
-volatile int spiCounter = 0;
 
 int main(void)
 {
-	/* Ausgänge definieren */
-	DDRB |= (1 << PB5) | (1 << PB4);
-	DDRA |= (1 << PA1) ;
+	/* set outputs */
+	DDRB |= (1 << PB5);					// PWM
+	DDRA |= (1 << PA1) ;				// INT0 für Raspberry
 	DDRF = 0xFF;
 	DDRC = 0xFF;
 	DDRK = 0xFF;
 	DDRH = 0xFF;
 
-	/* Werte an Ports geben */
-
-	/* set PORT values to 1111111 */
-	PORTF = 0xFF;	
-	PORTK = 0xFF;	
-	PORTH = 0xFF;	
-	PORTC = 0xFF;
-
-	/* SPI aktivieren */
-	SPCR = (1<<SPE) ;
+	/* activate SPI */
+	SPCR |= (1<<SPE);
 
 	/* (startup config) */
 	absStep = 250;
 
-	/* Timer initialisieren */
+	/* initialize Timer */
 	TCCR1A |= (1 << WGM11);
 	TCCR1B |= (1 << WGM12) | (1 << WGM13);		// FAST PWM Mode 14 einstellen
 	TCCR1A |= (1 << COM1A1);					// PWM auf Ausgang OC1A aktivieren (PB5)
@@ -52,6 +42,7 @@ int main(void)
 	OCR1A = (uint16_t)(icrValue/2);
 	TIMSK1 |= (1 << OCIE0A) | (1 << ICIE1);				//Interrupt bei Erreichen von OCR1A aktivieren
 	
+	/* activate global interrupts */
 	sei();
 
 	TCCR1B |= (1 << CS10);
@@ -61,43 +52,37 @@ int main(void)
 	}
 }
 
+uint8_t SPI_SlaveReceive(void){
+	/* Wait for reception complete */
+	while (!(SPSR & (1<<SPIF)));
+	/* Return data register */
+	return  SPDR;
+}
+
 /* Interrupt bei erreichen des ICR Wertes */
 ISR(TIMER1_COMPA_vect) {
 	execute_steps();
 }
 
 ISR(TIMER1_CAPT_vect) {
-	/* activate spi isr */
-	SPCR |= (1 << SPIE);
 	/* callback ready to get values to raspberry pi */
 	PORTA |= (1 << PA1);
-}
-
-ISR(SPI_STC_vect){
-	PORTK ^= (1 << PK0);
-	if(spiCounter > 3) {
-		spiCounter = 0;
-		/* callback finish to raspberry pi */
-		PORTA &= ~(1 << PA1);
-		/* deactivate isr */
-		SPCR &= ~(1 << SPIE);
+	for(uint8_t i = 0; i <= 3; i++) {
+		spiValues[i] = SPI_SlaveReceive();
 	}
-	spiCounter ++;
-	spiValues[spiCounter] = SPDR;
+	PORTA &= ~(1 << PA1);
 }
 
 void execute_steps(void){
-
 	//set PORTF
 	PORTF = spiValues[0];
 
 	//set PORTK
-	//PORTK = spiValues[1];
+	PORTK = spiValues[1];
 
 	//set PORTH
 	PORTH = spiValues[2];
 
 	//set PORTC
-	PORTC = spiValues[3];
-
+	PORTC = spiValues[3];	
 };
