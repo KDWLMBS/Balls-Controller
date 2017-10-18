@@ -17,12 +17,11 @@ volatile uint16_t absStep;
 volatile bool dirUp;
 volatile bool enabled;
 unsigned char spiValues[4];
-volatile int spiCounter;
+volatile int spiCounter = 0;
 
 int main(void)
 {
 	/* Ausgänge definieren */
-
 	DDRB |= (1 << PB5) | (1 << PB4);
 	DDRA |= (1 << PA1) ;
 	DDRF = 0xFF;
@@ -32,16 +31,14 @@ int main(void)
 
 	/* Werte an Ports geben */
 
-	//set PORT values to 1111111
+	/* set PORT values to 1111111 */
 	PORTF = 0xFF;	
 	PORTK = 0xFF;	
 	PORTH = 0xFF;	
 	PORTC = 0xFF;
 
 	/* SPI aktivieren */
-	SPCR = (1<<SPE);
-	
-	
+	SPCR = (1<<SPE) ;
 
 	/* (startup config) */
 	absStep = 250;
@@ -70,20 +67,18 @@ ISR(TIMER1_COMPA_vect) {
 }
 
 ISR(TIMER1_CAPT_vect) {
-
-	SPCR  |= (1 << SPIE);
+	/* activate spi isr */
+	SPCR |= (1 << SPIE);
 	/* callback ready to get values to raspberry pi */
 	PORTA |= (1 << PA1);
-
-	
 }
 
 ISR(SPI_STC_vect){
-	
+	PORTK ^= (1 << PK0);
 	if(spiCounter > 3) {
 		spiCounter = 0;
 		/* callback finish to raspberry pi */
-		PORTB &= ~(1 << PA1);
+		PORTA &= ~(1 << PA1);
 		/* deactivate isr */
 		SPCR &= ~(1 << SPIE);
 	}
@@ -97,7 +92,7 @@ void execute_steps(void){
 	PORTF = spiValues[0];
 
 	//set PORTK
-	PORTK = spiValues[1];
+	//PORTK = spiValues[1];
 
 	//set PORTH
 	PORTH = spiValues[2];
