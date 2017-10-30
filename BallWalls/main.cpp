@@ -10,9 +10,8 @@
 
 void execute_steps(void);
 
-#define icrValue 15999
+#define icrValue 23999
 
-volatile uint16_t absStep;
 volatile bool dirUp;
 volatile bool enabled;
 unsigned char spiValues[4];
@@ -29,9 +28,6 @@ int main(void)
 
 	/* activate SPI */
 	SPCR |= (1<<SPE);
-
-	/* (startup config) */
-	absStep = 250;
 
 	/* initialize Timer */
 	TCCR1A |= (1 << WGM11);
