@@ -10,7 +10,7 @@
 
 void execute_steps(void);
 
-#define icrValue 23999
+#define icrValue 15999
 
 volatile bool dirUp;
 volatile bool enabled;
@@ -23,11 +23,11 @@ int main(void)
 	DDRA |= (1 << PA1) ;				// INT0 für Raspberry
 	DDRF = 0xFF;
 	DDRC = 0xFF;
-	DDRK = 0xFF;
-	DDRH = 0xFF;
 
 	/* activate SPI */
 	SPCR |= (1<<SPE);
+	DDRK = 0xFF;
+	DDRH = 0xFF;
 
 	/* initialize Timer */
 	TCCR1A |= (1 << WGM11);
@@ -35,8 +35,9 @@ int main(void)
 	TCCR1A |= (1 << COM1A1);					// PWM auf Ausgang OC1A aktivieren (PB5)
 	
 	ICR1 = (uint16_t)icrValue;
-	OCR1A = (uint16_t)(icrValue/2);
-	TIMSK1 |= (1 << OCIE0A) | (1 << ICIE1);				//Interrupt bei Erreichen von OCR1A aktivieren
+	OCR1A = (uint16_t)(icrValue/10);
+	OCR1B = (uint16_t)((icrValue/10)*7);
+	TIMSK1 |= (1 << OCIE1B) | (1 << ICIE1);				//Interrupt
 	
 	/* activate global interrupts */
 	sei();
@@ -48,18 +49,20 @@ int main(void)
 	}
 }
 
+/* gets values from SPI */
 uint8_t SPI_SlaveReceive(void){
 	/* Wait for reception complete */
 	while (!(SPSR & (1<<SPIF)));
 	/* Return data register */
-	return  SPDR;
+	return SPDR;
 }
 
-/* Interrupt bei erreichen des ICR Wertes */
-ISR(TIMER1_COMPA_vect) {
+/* Interrupt routine (reaching OCR value) */
+ISR(TIMER1_COMPB_vect) {
 	execute_steps();
 }
 
+/* Interrupt  routine (reaching ICR value)*/
 ISR(TIMER1_CAPT_vect) {
 	/* callback ready to get values to raspberry pi */
 	PORTA |= (1 << PA1);
@@ -69,6 +72,7 @@ ISR(TIMER1_CAPT_vect) {
 	PORTA &= ~(1 << PA1);
 }
 
+/* writes values of SPI to ports */
 void execute_steps(void){
 	//set PORTF
 	PORTF = spiValues[0];
