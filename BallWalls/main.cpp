@@ -10,7 +10,7 @@
 
 void execute_steps(void);
 
-#define icrValue 15999
+#define icrValue 23999 
 
 volatile bool dirUp;
 volatile bool enabled;
@@ -35,8 +35,8 @@ int main(void)
 	TCCR1A |= (1 << COM1A1);					// PWM auf Ausgang OC1A aktivieren (PB5)
 	
 	ICR1 = (uint16_t)icrValue;
-	OCR1A = (uint16_t)(icrValue/10);
-	OCR1B = (uint16_t)((icrValue/10)*7);
+	OCR1A = 15999;
+	OCR1B = 19999;
 	TIMSK1 |= (1 << OCIE1B) | (1 << ICIE1);				//Interrupt
 	
 	/* activate global interrupts */
@@ -74,6 +74,7 @@ ISR(TIMER1_CAPT_vect) {
 
 /* writes values of SPI to ports */
 void execute_steps(void){
+
 	//set PORTF
 	PORTF = spiValues[0];
 
