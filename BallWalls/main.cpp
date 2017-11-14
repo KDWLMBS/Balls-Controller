@@ -10,7 +10,7 @@
 
 void execute_steps(void);
 
-#define icrValue 23999 
+#define icrValue 23999
 
 volatile bool dirUp;
 volatile bool enabled;
@@ -23,11 +23,12 @@ int main(void)
 	DDRA |= (1 << PA1) ;				// INT0 für Raspberry
 	DDRF = 0xFF;
 	DDRC = 0xFF;
+	DDRK = 0xFF;
+	DDRH = 0xFF;
 
 	/* activate SPI */
 	SPCR |= (1<<SPE);
-	DDRK = 0xFF;
-	DDRH = 0xFF;
+	
 
 	/* initialize Timer */
 	TCCR1A |= (1 << WGM11);
@@ -75,15 +76,11 @@ ISR(TIMER1_CAPT_vect) {
 /* writes values of SPI to ports */
 void execute_steps(void){
 
-	//set PORTF
 	PORTF = spiValues[0];
 
-	//set PORTK
 	PORTK = spiValues[1];
 
-	//set PORTH
 	PORTH = spiValues[2];
 
-	//set PORTC
 	PORTC = spiValues[3];	
 };
