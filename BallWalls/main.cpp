@@ -21,14 +21,14 @@ int main(void)
 	/* set outputs */
 	DDRB |= (1 << PB5);					// PWM
 	DDRA |= (1 << PA1) ;				// INT0 für Raspberry
+	
 	DDRF = 0xFF;
 	DDRC = 0xFF;
 	DDRK = 0xFF;
 	DDRH = 0xFF;
 
 	/* activate SPI */
-	SPCR |= (1<<SPE);
-	
+	SPCR |= (1<<SPE);	
 
 	/* initialize Timer */
 	TCCR1A |= (1 << WGM11);
