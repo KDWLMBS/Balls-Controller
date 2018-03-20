@@ -77,33 +77,33 @@ ISR(TIMER1_CAPT_vect) {
 }
 
 /* writes values of SPI to ports */
-		void execute_steps(void){
+void execute_steps(void){
 
-			PORTF = spiValues[0];
+	PORTF = spiValues[0];
 
-			PORTK = spiValues[1];
+	PORTK = spiValues[1];
 
-			PORTL = spiValues[2];
+	PORTL = spiValues[2];
 			
-			PORTA = spiValues[3];
+	PORTA = spiValues[3];
 			
-			PORTC = spiValues[4];
+	PORTC = spiValues[4];
 			
-			unsigned char wert;
+	unsigned char wert;
 			
-			// Set PORTD			
-			PORTD = (spiValues[5] & 0b00001111);
-			PORTD = PORTD | ((0b00010000 & spiValues[5]) << 3);
+	// Set PORTD			
+	PORTD = (spiValues[5] & 0b00001111);
+	PORTD = PORTD | ((0b00010000 & spiValues[5]) << 3);
 			
-			// Set PORTG		
-			PORTG = (spiValues[5] & 0b11100000) >> 5; 					
+	// Set PORTG		
+	PORTG = (spiValues[5] & 0b11100000) >> 5; 					
 			
-			// Set PORTH
-			PORTH = (spiValues[6] & 0b00000011) | ((spiValues[6] & 0b00111100) << 1);
+	// Set PORTH
+	PORTH = (spiValues[6] & 0b00000011) | ((spiValues[6] & 0b00111100) << 1);
 			
-			// Set PORTJ
-			PORTJ = ((spiValues[6] & 0b11000000) >> 6);
+	// Set PORTJ
+	PORTJ = ((spiValues[6] & 0b11000000) >> 6);
 			
-			// Set PORTB
-			PORTB = (spiValues[7] << 4) | (PORTB & 00001111);
+	// Set PORTB
+	PORTB = (spiValues[7] << 4) | (PORTB & 00001111);
 };
