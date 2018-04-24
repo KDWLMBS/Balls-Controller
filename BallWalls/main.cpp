@@ -55,7 +55,6 @@ int main(void)
 
 /* gets values from SPI */
 uint8_t SPI_SlaveReceive(void){
-	int temp = 0;
 	/* Wait for reception complete */
 	while ((!(SPSR & (1<<SPIF))));
 	/* Return data register */
