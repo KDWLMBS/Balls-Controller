@@ -14,14 +14,14 @@ void execute_steps(void);
 
 volatile bool dirUp;
 volatile bool enabled;
-unsigned char spiValues[7];
+unsigned char spiValues[8];
 
 int main(void)
 {
 	/* set outputs */
 	DDRB |= (1 << PB5);					// PWM
 	DDRB |= (1 << PB3) ;				// INT0 für Raspberry
-	
+		
 	DDRF = 0xFF;
 	DDRC = 0xFF;
 	DDRK = 0xFF;
@@ -47,7 +47,7 @@ int main(void)
 	sei();
 	TCCR1B &= ~((1 << CS12) | (1 << CS11) | (1 << CS10));
 	TCCR1B |= (1 << CS10); // Prescaler 1
-	
+		
 	while (1)
 	{
 	}
@@ -55,8 +55,9 @@ int main(void)
 
 /* gets values from SPI */
 uint8_t SPI_SlaveReceive(void){
+	int temp = 0;
 	/* Wait for reception complete */
-	while (!(SPSR & (1<<SPIF)));
+	while ((!(SPSR & (1<<SPIF))));
 	/* Return data register */
 	return SPDR;
 }
@@ -69,11 +70,11 @@ ISR(TIMER1_COMPA_vect) {
 /* Interrupt  routine (reaching ICR value)*/
 ISR(TIMER1_CAPT_vect) {
 	/* callback ready to get values to raspberry pi */
-	PORTA |= (1 << PB3);
+	PORTB |= (1 << PB3);
 	for(uint8_t i = 0; i <= 7; i++) {
 		spiValues[i] = SPI_SlaveReceive();
 	}
-	PORTB &= ~(1 << PB3);
+	PORTB &= ~(1 << PB3);	
 }
 
 /* writes values of SPI to ports */
@@ -88,9 +89,7 @@ void execute_steps(void){
 	PORTA = spiValues[3];
 			
 	PORTC = spiValues[4];
-			
-	unsigned char wert;
-			
+						
 	// Set PORTD			
 	PORTD = (spiValues[5] & 0b00001111);
 	PORTD = PORTD | ((0b00010000 & spiValues[5]) << 3);
